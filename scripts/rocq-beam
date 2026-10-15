@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+# Copyright (c) 2026 Lean FRO LLC. All rights reserved.
+# Released under Apache 2.0 license as described in the file LICENSE.
+# Author: Emilio J. Gallego Arias
+
+set -euo pipefail
+
+resolve_script_path() {
+  local source="${BASH_SOURCE[0]}"
+  local dir=""
+  while [ -L "$source" ]; do
+    dir="$(cd -P "$(dirname "$source")" && pwd)"
+    source="$(readlink "$source")"
+    case "$source" in
+      /*)
+        ;;
+      *)
+        source="$dir/$source"
+        ;;
+    esac
+  done
+  dir="$(cd -P "$(dirname "$source")" && pwd)"
+  printf '%s/%s\n' "$dir" "$(basename "$source")"
+}
+
+script_path="$(resolve_script_path)"
+script_dir="$(cd -P "$(dirname "$script_path")" && pwd)"
+beam_home_explicit=0
+if [ -n "${ROCQ_BEAM_HOME:-}" ]; then
+  beam_home="$ROCQ_BEAM_HOME"
+  beam_home_explicit=1
+else
+  beam_home="$(cd -P "$script_dir/.." && pwd)"
+fi
+beam_bin=""
+if [ "$beam_home_explicit" -eq 1 ]; then
+  if [ -x "$beam_home/libexec/rocq-beam-cli" ]; then
+    beam_bin="$beam_home/libexec/rocq-beam-cli"
+  elif [ -x "$beam_home/.lake/build/bin/rocq-beam-cli" ]; then
+    beam_bin="$beam_home/.lake/build/bin/rocq-beam-cli"
+  fi
+else
+  if [ -x "$beam_home/.lake/build/bin/rocq-beam-cli" ]; then
+    beam_bin="$beam_home/.lake/build/bin/rocq-beam-cli"
+  elif [ -x "$beam_home/libexec/rocq-beam-cli" ]; then
+    beam_bin="$beam_home/libexec/rocq-beam-cli"
+  fi
+fi
+
+if [ -z "$beam_bin" ] || [ ! -x "$beam_bin" ]; then
+  echo "missing rocq-beam-cli executable under $beam_home" >&2
+  exit 1
+fi
+
+export ROCQ_BEAM_HOME="$beam_home"
+export ROCQ_BEAM_WRAPPER_PATH="$script_path"
+export ROCQ_BEAM_PUBLIC_COMMAND="rocq-beam"
+
+exec "$beam_bin" "$@"

@@ -1,0 +1,28 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  rocq:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/lean-ci-setup
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
+          dune-cache: true
+          opam-repositories: |
+            default: git+https://github.com/ocaml/opam-repository.git
+            coq-released: https://coq.inria.fr/opam/released
+          opam-local-packages: tests/rocq-ci.opam
+      - run: opam install -y ./tests/rocq-ci.opam --deps-only
+      - run: bash tests/test-rocq-beam.sh
+      - run: bash tests/test-install.sh

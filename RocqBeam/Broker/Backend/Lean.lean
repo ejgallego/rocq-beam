@@ -1,0 +1,96 @@
+/-
+Copyright (c) 2026 Lean FRO LLC. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Author: Emilio J. Gallego Arias
+-/
+
+import Lean
+import Lean.Data.Lsp.Extra
+import Lean.Data.Lsp.LanguageFeatures
+import RocqBeam.Broker.Config
+import RocqBeam.Broker.LakeEnv
+import RocqBeam.Broker.Protocol
+import RocqBeam.LSP.Goals
+import RocqBeam.LSP.RunAt
+import RocqBeam.LSP.Save
+import RocqBeam.LSP.Todo
+import RocqBeam.Path
+
+open Lean
+open Lean.Lsp
+
+namespace RocqBeam.Broker.Backend.Lean
+
+def command (config : BrokerConfig) : IO (String × Array String × Array (String × Option String)) := do
+  let some leanConfig := config.lean?
+    | throw <| IO.userError "Lean backend is not configured"
+  let plugin ← RocqBeam.resolveExistingPath leanConfig.plugin
+  let lakeEnv ← leanServerLakeEnv config.root (some leanConfig.command) leanConfig.lakeHelper?
+  pure (
+    leanConfig.command,
+    #["--server"] ++ lakeEnv.moreServerArgs ++
+      #[s!"--plugin={plugin}", "-Dexperimental.module=true"],
+    lakeEnv.env)
+
+def initializeParams (root : System.FilePath) : Json :=
+  let rootUri := System.Uri.pathToUri root
+  toJson ({
+    processId? := some 0
+    rootUri? := some rootUri
+    workspaceFolders? := some #[{ uri := rootUri, name := root.fileName.getD root.toString }]
+    initializationOptions? := some { hasWidgets? := some true, logCfg? := none }
+    capabilities := {
+      textDocument? := some {
+        completion? := some {
+          completionItem? := some { insertReplaceSupport? := true }
+        }
+      }
+    }
+    : InitializeParams
+  })
+
+def runAtMethod : String :=
+  RocqBeam.LSP.RunAt.method
+
+def hoverMethod : String :=
+  "textDocument/hover"
+
+def signatureHelpMethod : String :=
+  "textDocument/signatureHelp"
+
+def definitionMethod : String :=
+  "textDocument/definition"
+
+def referencesMethod : String :=
+  "textDocument/references"
+
+def documentSymbolsMethod : String :=
+  "textDocument/documentSymbol"
+
+def workspaceSymbolsMethod : String :=
+  "workspace/symbol"
+
+def codeActionResolveMethod : String :=
+  "codeAction/resolve"
+
+def runWithMethod : String :=
+  RocqBeam.LSP.RunAt.runWithMethod
+
+def releaseMethod : String :=
+  RocqBeam.LSP.RunAt.releaseHandleMethod
+
+def saveArtifactsMethod : String :=
+  RocqBeam.LSP.Save.saveArtifactsMethod
+
+def diagnosticsBarrierMethod : String :=
+  "$/beam/waitForDiagnostics"
+
+def goalsMethod (mode? : Option GoalMode := none) : String :=
+  match mode?.getD .after with
+  | .before => RocqBeam.LSP.Goals.prevMethod
+  | .after => RocqBeam.LSP.Goals.afterMethod
+
+def todoMethod : String :=
+  RocqBeam.LSP.Todo.method
+
+end RocqBeam.Broker.Backend.Lean

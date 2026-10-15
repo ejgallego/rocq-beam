@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rocq Beam"
+  short_description: "Inspect Rocq proof states through coq-lsp"
+  default_prompt: "Use rocq-beam to inspect saved Rocq proof states."

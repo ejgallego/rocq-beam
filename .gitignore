@@ -1,0 +1,4 @@
+.lake/
+.rocq-beam/
+_opam/
+__pycache__/
