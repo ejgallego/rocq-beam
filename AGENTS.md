@@ -1,5 +1,8 @@
 # AGENTS.md
 
+This project is feature-complete and frozen. Do not start new feature development or internal
+refactoring unless explicitly requested by the maintainer.
+
 This repository owns Rocq Beam. Keep the public surface limited to isolated saved-file goal probes
 through `coq-lsp`. Use no fallback executor. Keep the `rocq-beam` skill Rocq-only and self-contained;
 do not introduce shared Lean/Rocq skill files or dependencies on a Lean Beam checkout.
