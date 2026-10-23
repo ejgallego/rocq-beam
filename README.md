@@ -64,6 +64,9 @@ Goal probes, session commands, `open-files`, and `stats` emit JSON on stdout. `d
 print text. Check exit status: setup and transport failures may emit only stderr. Use
 `rocq-beam --help` for the command list.
 
+A failed speculative tactic returns `ok: false` with the server's message and error code
+(for example, `error.code: "-32803"`). It leaves the session available for the next saved-file probe.
+
 The session descriptor is `<root>/.rocq-beam/rocq-beam-daemon.json`. For an alternate location, set
 `ROCQ_BEAM_SESSION_ROOT` to a writable absolute directory, or pass the same absolute
 `--session-dir DIR` to the owner and every attaching command. Inspect `status` after a crash;

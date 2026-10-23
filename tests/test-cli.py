@@ -55,6 +55,25 @@ with tempfile.TemporaryDirectory(prefix='rocq-beam-cli-') as temp:
             baseline = call(root, 'goals-prev', 'Semi.v', '2', '3')
             assert len(baseline['goals']['goals']) == 1, baseline
             two_goals(call(root, 'goals-prev', 'Semi.v', '2', '3', 'split.'))
+            # BUC-0011: a valid LSP RequestFailed response is a tactic failure,
+            # not a decoder exception or a reason to replace the backend worker.
+            status_before = call(root, 'status')
+            stats_before = call(root, 'stats')
+            failed = call(root, 'goals-prev', 'Semi.v', '2', '3',
+                          'reflexivity.', success=False)
+            failure = json.loads(failed.stdout)
+            assert not failure['ok'], failure
+            assert failure['error']['code'] == '-32803', failure
+            assert failure['error']['message'].strip(), failure
+            two_goals(call(root, 'goals-prev', 'Semi.v', '2', '3', 'split.'))
+            baseline_after = call(root, 'goals-prev', 'Semi.v', '2', '3')
+            assert baseline_after == baseline, (baseline, baseline_after)
+            assert call(root, 'status') == status_before
+            stats_after = call(root, 'stats')
+            assert stats_after['sessions']['rocq'] == stats_before['sessions']['rocq']
+            for key in ('sessionStarts', 'sessionRestarts', 'workerExitedCount'):
+                assert (stats_after['byBackend']['rocq'][key] ==
+                        stats_before['byBackend']['rocq'][key]), (key, stats_after)
             error = call(root, 'goals-after', 'Error.v', '4', '2')
             assert error.get('error'), error
             call(root, 'run-at', 'Demo.v', '2', '8', 'split.', success=False)

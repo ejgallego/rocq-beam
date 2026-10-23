@@ -85,7 +85,7 @@ def resolveResponse (pending : PendingRequest) (result : Json) : IO Unit := do
 
 def resolveError
     (pending : PendingRequest)
-    (code : ErrorCode)
+    (code : Int)
     (message : String)
     (data? : Option Json := none) : IO Unit := do
   let progress? ← pending.progressRef.get

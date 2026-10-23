@@ -5,6 +5,7 @@ Author: Emilio J. Gallego Arias
 -/
 
 import RocqBeam.Broker.Protocol
+import RocqBeamTest.Broker.BackendMessageTest
 import RocqBeamTest.Broker.TestUtil
 import Lean
 
@@ -51,8 +52,8 @@ private def expectSurfacedError (resp : RocqBeam.Broker.Response) : IO Unit := d
     throw <| IO.userError s!"expected broker error, got success {(toJson resp).compress}"
   let some err := resp.error?
     | throw <| IO.userError s!"expected broker error payload, got {(toJson resp).compress}"
-  if err.code == "internalError" then
-    throw <| IO.userError s!"expected surfaced Rocq error, got internalError: {err.message}"
+  if err.code == "internalError" || err.code == "workerExited" then
+    throw <| IO.userError s!"expected surfaced Rocq error, got {err.code}: {err.message}"
   if err.message.trimAscii.isEmpty then
     throw <| IO.userError s!"expected non-empty surfaced Rocq error, got {(toJson resp).compress}"
 
@@ -66,6 +67,7 @@ private def updateVersion
   pure result.version
 
 def main : IO Unit := do
+  RocqBeamTest.Broker.BackendMessageTest.check
   let endpoint ← freshTcpEndpoint
   let root ← rocqRoot
   let broker ← spawnRocqBroker endpoint root ((← IO.getEnv "ROCQ_BEAM_COQ_LSP").getD "coq-lsp")

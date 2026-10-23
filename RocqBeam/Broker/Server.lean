@@ -11,6 +11,7 @@ import Lean.Data.Lsp.LanguageFeatures
 import Lean.Data.Lsp.Internal
 import Lean.Parser.Module
 import Lean.Server.CodeActions
+import RocqBeam.Broker.BackendMessage
 import RocqBeam.Broker.Config
 import RocqBeam.Broker.DocumentState
 import RocqBeam.Broker.Errors
@@ -493,7 +494,7 @@ private def nextRequestId (session : Session) : Session × RequestID :=
 
 partial def sessionReaderLoop (session : Session) : IO Unit := do
   try
-    let msg ← session.stdout.readLspMessage
+    let msg ← BackendMessage.read session.stdout
     match msg with
     | .response id result =>
         let pending? ← PendingRequestStore.remove session.pending id
@@ -631,7 +632,7 @@ def sendRequestJsonTrackedDetailed
   | .error failure => pure <| .error failure
 
 private partial def awaitInitializeResponse (stdout : IO.FS.Stream) : IO Unit := do
-  let msg ← stdout.readLspMessage
+  let msg ← BackendMessage.read stdout
   match msg with
   | .response id _ =>
       if id == 0 then

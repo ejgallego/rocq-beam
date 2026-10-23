@@ -48,6 +48,9 @@ set `ROCQ_BEAM_SESSION_ROOT` to a writable absolute directory, or pass the same 
 
 Successful calls write a JSON response to stdout. Check exit status first; setup and transport
 errors may write only stderr. Never parse exception text to recover structured control flow.
+A failed speculative tactic exits nonzero with `ok: false`, `error.code`, and `error.message` in
+the JSON response on stdout. Read that structured diagnostic and continue with another probe from
+the saved source; an ordinary tactic failure does not require restarting the session.
 If a file changes during a probe, rerun from the saved file. If coq-lsp reports unexpected stale or
 broken state, stop and report it loudly.
 

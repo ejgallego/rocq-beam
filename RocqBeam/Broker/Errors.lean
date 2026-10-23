@@ -112,9 +112,13 @@ def errorCodeName : JsonRpc.ErrorCode → String
 
 /-- Preserve a typed error received from an underlying JSON-RPC backend. -/
 def backendResponseFailure
-    (code : JsonRpc.ErrorCode)
+    (code : Int)
     (message : String := "")
     (data? : Option Json := none) : ResponseFailure :=
-  { error := { code := errorCodeName code, message, data? } }
+  let codeName :=
+    match fromJson? (α := JsonRpc.ErrorCode) (toJson code) with
+    | .ok known => errorCodeName known
+    | .error _ => toString code
+  { error := { code := codeName, message, data? } }
 
 end RocqBeam.Broker
