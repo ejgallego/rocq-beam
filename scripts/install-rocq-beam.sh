@@ -46,8 +46,8 @@ for target in "${targets[@]}"; do
   fi
 done
 mkdir -p "$prefix/bin" "$runtime/libexec" "$runtime/scripts"
-cp "$repo_root/.lake/build/bin/rocq-beam-cli" "$runtime/libexec/rocq-beam-cli"
-cp "$repo_root/.lake/build/bin/rocq-beam-daemon" "$runtime/libexec/rocq-beam-daemon"
+install -m 755 "$repo_root/.lake/build/bin/rocq-beam-cli" "$runtime/libexec/rocq-beam-cli"
+install -m 755 "$repo_root/.lake/build/bin/rocq-beam-daemon" "$runtime/libexec/rocq-beam-daemon"
 cp "$repo_root/scripts/rocq-beam" "$runtime/scripts/rocq-beam"
 printf 'rocq-beam\n' > "$runtime/.rocq-beam-runtime"
 ln -sfn "$runtime/scripts/rocq-beam" "$prefix/bin/rocq-beam"

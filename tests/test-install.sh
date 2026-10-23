@@ -20,6 +20,10 @@ for agent_home in "$CODEX_HOME" "$CLAUDE_HOME" "$PI_CODING_AGENT_DIR" "$OPENCODE
   test ! -e "$agent_home/skills/lean-beam"
 done
 test "$(BEAM_HOME=/nonexistent "$prefix/bin/rocq-beam" version)" = 'rocq-beam 0.1.0'
+# Earlier installers copied Lake's read-only mode; upgrading those binaries must work.
+chmod a-w "$prefix/share/rocq-beam/libexec/rocq-beam-cli" \
+  "$prefix/share/rocq-beam/libexec/rocq-beam-daemon"
+bash scripts/install-rocq-beam.sh --prefix "$prefix" --all-skills
 python3 tests/test-cli.py --wrapper "$prefix/bin/rocq-beam"
 # An unrelated skill directory must survive attempted replacement.
 export CODEX_HOME="$task_tmp/unowned"
